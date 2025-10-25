@@ -1,3 +1,15 @@
 {
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "cSpell.words": [
+        "testbenchmanager"
+    ],
+   "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter", // For Black
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "always"
+    }
+     },
+   "isort.args": ["--profile", "black"],
+
 }

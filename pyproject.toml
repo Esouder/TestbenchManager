@@ -8,6 +8,8 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi (>=0.118.0,<0.119.0)",
+    "pydantic (>=2.11.9,<3.0.0)"
 ]
 
 [dependency-groups]
