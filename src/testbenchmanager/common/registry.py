@@ -25,3 +25,14 @@ class Registry(Generic[T]):
     @property
     def keys(self) -> list[str]:
         return list(self._registry.keys())
+
+
+class ClassRegistry(Registry[type[T]], Generic[T]):
+    def register_class(self):
+        """Decorator to register a class in the registry."""
+
+        def decorator(cls: type[T]) -> type[T]:
+            self.register(cls.__qualname__, cls)
+            return cls
+
+        return decorator

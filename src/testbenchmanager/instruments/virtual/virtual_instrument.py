@@ -41,7 +41,11 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         Generic (_type_): Type of the value held by the virtual instrument.
     """
 
-    def __init__(self, metadata: VirtualInstrumentMetadata):
+    def __init__(
+        self,
+        metadata: VirtualInstrumentMetadata,
+        command_callback: Optional[Callable[[VirtualInstrumentValue], None]] = None,
+    ) -> None:
         self.metadata: VirtualInstrumentMetadata = metadata
 
         self._logger = PrefixAdaptor(logger, f"[{self.metadata.uid}] ")
@@ -56,6 +60,37 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         self._consumer_queues: set[
             Queue[VirtualInstrumentState[VirtualInstrumentValue]]
         ] = set()
+
+        self._command_callback = command_callback
+
+    @property
+    def value(self) -> VirtualInstrumentValue:
+        """
+        Helper method to expose the value from the most recent instrument state
+
+        Returns:
+            VirtualInstrumentValue: The most recent value the Virtual Instrument has processed
+        """
+        return self.get_latest_state().value
+
+    def command(self, value: VirtualInstrumentValue) -> None:
+        """
+        Attempt to command 'up' to the translation layer to make this virtual instrument read the
+        specified value.
+
+        Not all virtual instruments can be commanded. If this instrument cannot be commanded,
+        an error will be logged and the command will be ignored.
+
+        Args:
+            value (VirtualInstrumentValue): Value to set.
+        """
+        if self._command_callback is None:
+            self._logger.critical(
+                "Received command for virtual instrument without command callback set"
+            )
+            return
+
+        self._command_callback(value)
 
     def update_state(self, value: VirtualInstrumentValue) -> None:
         """

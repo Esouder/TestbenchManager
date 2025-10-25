@@ -5,7 +5,7 @@ from testbenchmanager.runner.step import BaseStep
 from testbenchmanager.runner.step_registry import step_registry
 
 
-@step_registry.register_step()
+@step_registry.register_class()
 class Wait(BaseStep):
     name: ClassVar[str] = "wait"
     duration: float  # in seconds
