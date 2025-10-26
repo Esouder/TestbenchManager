@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from pydantic import BaseModel
 
 from .step import Step

@@ -1,4 +1,7 @@
-from testbenchmanager.common import ClassRegistry
+# pylint: skip-file
+
+
+from testbenchmanager.common.registry import ClassRegistry
 
 from .step import Step
 

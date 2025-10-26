@@ -1,3 +1,5 @@
+"""Registry for translator classes."""
+
 from typing import Any
 
 from testbenchmanager.common.registry import ClassRegistry

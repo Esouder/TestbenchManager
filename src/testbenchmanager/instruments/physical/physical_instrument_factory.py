@@ -6,6 +6,9 @@ import sys
 from .physical_instrument_configuration import PhysicalInstrumentConfiguration
 
 
+# pylint: disable=too-few-public-methods
+# The factory really only needs one method.
+# TODO: consider making this a module with a single function instead of a class?
 class PhysicalInstrumentFactory:
     """Factory for creating physical instrument instances from configuration.
 
@@ -26,8 +29,10 @@ class PhysicalInstrumentFactory:
 
         Raises:
             ImportError: The module specified in the configuration could not be imported.
-            AttributeError: The class specified in the configuration could not be found in the module.
-            RuntimeError: The instrument class could not be instantiated with the provided arguments.
+            AttributeError: The class specified in the configuration could not be found in the
+            module.
+            RuntimeError: The instrument class could not be instantiated with the provided
+            arguments.
 
         Returns:
             object: Instantiated physical instrument object.

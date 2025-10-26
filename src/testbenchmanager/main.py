@@ -1,3 +1,6 @@
+# pylint: skip-file
+# TODO: Remove skip-file when possible
+
 import argparse
 import logging
 from pathlib import Path
@@ -16,7 +19,6 @@ parser.add_argument(
 )
 
 
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
@@ -28,7 +30,9 @@ if __name__ == "__main__":
     )
     instrument_manager_instance = InstrumentManager()
 
-    instrument_config = InstrumentConfiguration.model_validate(instrument_config_dir.get_contents(instrument_config_dir.configuration_uids[0]))
+    instrument_config = InstrumentConfiguration.model_validate(
+        instrument_config_dir.get_contents(instrument_config_dir.configuration_uids[0])
+    )
 
     instrument_manager_instance.load_from_configuration(instrument_config)
 
@@ -38,7 +42,7 @@ if __name__ == "__main__":
     logger.info("Registered virtual instruments:")
     for uid, instrument in virtual_instrument_registry._registry.items():
         logger.info("UID: %s, Instrument: %s", uid, instrument)
-    
+
     # Keep the application running to allow translators to operate
     try:
         while True:
@@ -46,6 +50,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("Shutting down Testbench Manager.")
         instrument_manager_instance.stop_all_translators()
-
-
-

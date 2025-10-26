@@ -1,5 +1,4 @@
-#from .translators import *  # this must be first  # isort: skip
-
+"""Translation layer submodule."""
 
 from .translator import Translator as Translator
 from .translator_configuration import TranslatorConfiguration as TranslatorConfiguration

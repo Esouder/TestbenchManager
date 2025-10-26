@@ -28,6 +28,9 @@ class VirtualInstrumentMetadata(BaseModel):
     description: Optional[str] = None
 
 
+# pylint: disable=too-many-instance-attributes
+# We somewhat need all of these attributes to manage the state and subscriptions, I'm not
+# sure if it would be better to refactor them out into more levels of abstraction.
 class VirtualInstrument(Generic[VirtualInstrumentValue]):
     """
     A Virtual Instrument is a representation of a single value or measurement, which can be updated
@@ -211,7 +214,8 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         process every single state update.
 
         Args:
-            stop (Optional[Event], optional): Event which will terminate the iterator when it set. Defaults to None.
+            stop (Optional[Event], optional): Event which will terminate the iterator when it set.
+            Defaults to None.
 
         Yields:
             Iterator[VirtualInstrumentState[T]]: Iterator yielding new states as they arrive.

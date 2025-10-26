@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from typing import Annotated, ClassVar, Protocol
 
 from pydantic import AliasChoices, BaseModel, Field

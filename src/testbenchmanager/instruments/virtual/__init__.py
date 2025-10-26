@@ -1,3 +1,5 @@
+"""Virtual instrument submodule."""
+
 from .virtual_instrument import VirtualInstrument as VirtualInstrument
 from .virtual_instrument import VirtualInstrumentMetadata as VirtualInstrumentMetadata
 from .virtual_instrument_registry import (

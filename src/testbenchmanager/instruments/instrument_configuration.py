@@ -1,3 +1,5 @@
+"""configuration model definitions for the instruments-scope configuration file."""
+
 import logging
 from typing import Optional
 
@@ -14,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class InstrumentConfiguration(BaseModel):
+    """
+    Configuration model for the instrument-scope config file.
+    """
 
     name: str
     description: Optional[str] = None
@@ -28,6 +33,9 @@ class InstrumentConfiguration(BaseModel):
         cls,
         physical_instruments: list[PhysicalInstrumentConfiguration],
     ) -> list[PhysicalInstrumentConfiguration]:
+        """
+        Perform validation on elements of the physical instrument list.
+        """
 
         uids = set(
             physical_instruments_item.uid
@@ -48,6 +56,9 @@ class InstrumentConfiguration(BaseModel):
         cls,
         translators: list[TranslatorConfiguration],
     ) -> list[TranslatorConfiguration]:
+        """
+        Perform validation on elements of the translators list.
+        """
 
         uids = set(translators_item.metadata.uid for translators_item in translators)
         if len(uids) != len(translators):

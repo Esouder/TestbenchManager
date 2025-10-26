@@ -1,3 +1,5 @@
+"""Top-level manager for the instrumentation component."""
+
 import logging
 from typing import Any, Optional
 
@@ -10,6 +12,12 @@ logger = logging.getLogger(__name__)
 
 
 class InstrumentManager:
+    """
+    This is the top-level manager for the instrumentation component.
+
+    It holds responsibility for populating the various instrument registries from configuration
+    models, and managing the lifecycle of translators.
+    """
 
     def __init__(self):
         self._translators: list[Translator[Any]] = []
@@ -17,6 +25,13 @@ class InstrumentManager:
         self.loaded_configuration_description: Optional[str] = None
 
     def load_from_configuration(self, config: InstrumentConfiguration) -> None:
+        """
+        Unload the current instrument configuration (if any) and load in a new instrument
+        configuration.
+
+        Args:
+            config (InstrumentConfiguration): The instrument configuration model to load.
+        """
 
         self.stop_all_translators()
 
@@ -45,7 +60,9 @@ class InstrumentManager:
             try:
                 translator_instance = translator_class(translator_config)
                 self._translators.append(translator_instance)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                # Catching broad exception here to ensure one faulty translator does not break the
+                # entire instrument loading process. We'd like to log the error and continue.
                 logger.error(
                     "Error occurred while instantiating translator '%s': %s",
                     translator_config.class_name,
@@ -55,10 +72,16 @@ class InstrumentManager:
         self.start_all_translators()
 
     def start_all_translators(self) -> None:
+        """
+        Start all loaded translators.
+        """
         for translator in self._translators:
             translator.start()
 
     def stop_all_translators(self) -> None:
+        """
+        Stop all loaded translators.
+        """
         for translator in self._translators:
             translator.stop()
 

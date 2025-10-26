@@ -1,3 +1,5 @@
+"""Physical instrument submodule"""
+
 from .physical_instrument_configuration import (
     PhysicalInstrumentConfiguration as PhysicalInstrumentConfiguration,
 )

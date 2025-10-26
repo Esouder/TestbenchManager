@@ -1,3 +1,7 @@
+# pylint: skip-file
+# TODO: Remove skip-file when possible
+
+
 import time
 from typing import ClassVar
 
