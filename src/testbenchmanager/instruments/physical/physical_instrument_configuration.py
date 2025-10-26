@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 
 class PhysicalInstrumentConfiguration(BaseModel):

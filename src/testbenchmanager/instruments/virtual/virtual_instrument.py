@@ -55,7 +55,7 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         ] = set()
         self._state: VirtualInstrumentState[VirtualInstrumentValue]
         self._state_lock: Lock = Lock()
-        self._condition: Condition = Condition()
+        self._condition: Condition = Condition(self._state_lock)
         self._sequence: int = 0
         self._consumer_queues: set[
             Queue[VirtualInstrumentState[VirtualInstrumentValue]]
@@ -101,9 +101,10 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
             value (T): value to update the state to.
         """
         with self._state_lock:
-            self._state = VirtualInstrumentState(
+            state = VirtualInstrumentState(
                 value=value, sequence=self._sequence, timestamp=datetime.now()
             )
+            self._state = state
             self._sequence += 1
             self._condition.notify_all()
 
@@ -112,7 +113,7 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         # Notify all subscribers
         for callback in self._subscriber_callbacks:
             try:
-                callback(self._state)
+                callback(state)
             except Exception as e:  # pylint: disable=broad-exception-caught
                 # We don't want a failing subscriber to fuck everything up for any reason, so we
                 # just log it.
@@ -122,12 +123,12 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
 
         for queue in list(self._consumer_queues):
             try:
-                queue.put_nowait(self._state)
+                queue.put_nowait(state)
             except Full:
                 try:
                     # Drop the oldest item in the queue.
                     queue.get_nowait()
-                    queue.put_nowait(self._state)
+                    queue.put_nowait(state)
                 except Empty:
                     # It may be possible for the queue to go from full to empty in this
                     pass

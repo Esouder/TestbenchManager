@@ -22,7 +22,7 @@ class Translator(ABC, Generic[VirtualInstrumentValue]):
             VirtualInstrument[
                 VirtualInstrumentValue
             ],  # Is there a better way to type this?
-        ]  # UID: VirtualInstrument mapping = {}
+        ] = {}  # UID: VirtualInstrument mapping
         self._thread: Thread = Thread(target=self.worker_thread, daemon=True)
         self._stop_event: Event = Event()
 
@@ -31,7 +31,6 @@ class Translator(ABC, Generic[VirtualInstrumentValue]):
     @classmethod
     @abstractmethod
     def configuration(cls) -> type[TranslatorConfiguration]: ...
-
 
     def start(self) -> None:
         self._thread.start()
