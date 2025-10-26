@@ -54,4 +54,4 @@ class PhysicalInstrumentRegistry(Registry[object]):
         self._registry.clear()
 
 
-physical_instrument_registry = Registry[object]()  # global singleton instance
+physical_instrument_registry = PhysicalInstrumentRegistry()  # global singleton instance

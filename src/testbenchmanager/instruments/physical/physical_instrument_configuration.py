@@ -14,7 +14,7 @@ class PhysicalInstrumentConfiguration(BaseModel):
     name: Optional[str] = None
     module_name: Annotated[str, Field(alias="module")]
     class_name: Annotated[str, Field(alias="class")]
-    arguments: dict[str, Any]
+    arguments: dict[str, Any] = {}
 
     @model_validator(mode="before")
     @classmethod
@@ -43,9 +43,11 @@ class PhysicalInstrumentConfiguration(BaseModel):
             # This should never happen, unless we fuck with the field definitions above.
             return data
 
-        class_name = data.get(module_model_field.alias)
-        module_name = data.get(class_model_field.alias)
-
+        class_name = data.get(class_model_field.alias)
+        module_name = data.get(module_model_field.alias)
+        print("attempting normalization:")
+        print(f"  class_name: {class_name}")
+        print(f"  module_name: {module_name}")
         if isinstance(class_name, str) and "." in class_name and not module_name:
             parts = class_name.rsplit(".", 1)
             data["module"] = parts[0]

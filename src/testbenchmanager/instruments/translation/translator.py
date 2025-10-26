@@ -28,6 +28,11 @@ class Translator(ABC, Generic[VirtualInstrumentValue]):
 
         self._logger = PrefixAdaptor(logger, f"[{self.metadata.uid}] ")
 
+    @classmethod
+    @abstractmethod
+    def configuration(cls) -> type[TranslatorConfiguration]: ...
+
+
     def start(self) -> None:
         self._thread.start()
 

@@ -41,6 +41,10 @@ class PollingTranslatorConfiguration(TranslatorConfiguration):
 @translator_registry.register_class()
 class PollingTranslator(Translator[VirtualInstrumentValue]):
 
+    @classmethod
+    def configuration(cls) -> type[PollingTranslatorConfiguration]:
+        return PollingTranslatorConfiguration
+
     def __init__(self, configuration: PollingTranslatorConfiguration) -> None:
         super().__init__(configuration)
         try:

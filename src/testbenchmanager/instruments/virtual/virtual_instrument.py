@@ -107,6 +107,8 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
             self._sequence += 1
             self._condition.notify_all()
 
+        self._logger.debug("State updated to: %s", self._state)
+
         # Notify all subscribers
         for callback in self._subscriber_callbacks:
             try:

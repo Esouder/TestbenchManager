@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class TranslatorMetadata(BaseModel):
@@ -11,3 +11,8 @@ class TranslatorMetadata(BaseModel):
 
 class TranslatorConfiguration(BaseModel):
     metadata: TranslatorMetadata
+    class_name: Annotated[str, Field(validation_alias=AliasChoices("class", "class_name"))]
+
+    class Config:
+        extra = "allow"
+        

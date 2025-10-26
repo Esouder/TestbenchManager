@@ -3,8 +3,12 @@ from typing import Optional
 
 from pydantic import BaseModel, field_validator
 
-from .physical import PhysicalInstrumentConfiguration
-from .translation import TranslatorConfiguration
+from testbenchmanager.instruments.physical.physical_instrument_configuration import (
+    PhysicalInstrumentConfiguration,
+)
+from testbenchmanager.instruments.translation.translator_configuration import (
+    TranslatorConfiguration,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +16,7 @@ logger = logging.getLogger(__name__)
 class InstrumentConfiguration(BaseModel):
 
     name: str
-    desciprtion: Optional[str] = None
+    description: Optional[str] = None
 
     physical_instruments: list[PhysicalInstrumentConfiguration] = []
 
@@ -33,7 +37,7 @@ class InstrumentConfiguration(BaseModel):
             raise ValueError(
                 "Duplicate UIDs found in physical_instruments configuration."
             )
-        elif len(uids) == 0:
+        if len(uids) == 0:
             logger.warning("No physical instruments configured. Is this correct?")
 
         return physical_instruments
@@ -48,7 +52,7 @@ class InstrumentConfiguration(BaseModel):
         uids = set(translators_item.metadata.uid for translators_item in translators)
         if len(uids) != len(translators):
             raise ValueError("Duplicate UIDs found in translators configuration.")
-        elif len(uids) == 0:
+        if len(uids) == 0:
             logger.warning("No translators configured. Is this correct?")
 
         return translators
