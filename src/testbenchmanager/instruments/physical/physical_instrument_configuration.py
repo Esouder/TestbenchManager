@@ -45,9 +45,6 @@ class PhysicalInstrumentConfiguration(BaseModel):
 
         class_name = data.get(class_model_field.alias)
         module_name = data.get(module_model_field.alias)
-        print("attempting normalization:")
-        print(f"  class_name: {class_name}")
-        print(f"  module_name: {module_name}")
         if isinstance(class_name, str) and "." in class_name and not module_name:
             parts = class_name.rsplit(".", 1)
             data["module"] = parts[0]
