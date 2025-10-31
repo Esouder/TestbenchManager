@@ -1,4 +1,5 @@
 # pylint: skip-file
+# TODO: Remove skip-file when possible
 
 
 from testbenchmanager.common.registry import ClassRegistry

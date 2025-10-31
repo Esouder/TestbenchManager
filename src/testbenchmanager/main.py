@@ -5,10 +5,12 @@ import argparse
 import logging
 from pathlib import Path
 
+import uvicorn
+
+from testbenchmanager.api import api
 from testbenchmanager.configuration import ConfigurationManager, ConfigurationScope
 from testbenchmanager.instruments import InstrumentConfiguration, InstrumentManager
 from testbenchmanager.instruments.translation.translators import *  # Ensure translators are registered
-from testbenchmanager.instruments.virtual import virtual_instrument_registry
 
 parser = argparse.ArgumentParser(description="Testbench Manager")
 parser.add_argument(
@@ -18,9 +20,17 @@ parser.add_argument(
     help="Path to the root configuration directory",
 )
 
+parser.add_argument(
+    "--log-level",
+    type=str.upper,
+    default="INFO",
+    help="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
+    choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+)
+
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=getattr(logging, parser.parse_args().log_level))
     logger = logging.getLogger(__name__)
     args = parser.parse_args()
     config_root = args.config_root
@@ -38,15 +48,9 @@ if __name__ == "__main__":
 
     logger.info("Loaded instrument configuration: %s", instrument_config.name)
 
-    # For demonstration purposes, list registered virtual instruments
-    logger.info("Registered virtual instruments:")
-    for uid, instrument in virtual_instrument_registry._registry.items():
-        logger.info("UID: %s, Instrument: %s", uid, instrument)
-
     # Keep the application running to allow translators to operate
     try:
-        while True:
-            pass
+        uvicorn.run(api, host="0.0.0.0", port=8000)
     except KeyboardInterrupt:
         logger.info("Shutting down Testbench Manager.")
         instrument_manager_instance.stop_all_translators()

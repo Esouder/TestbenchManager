@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Generic, TypeVar
 
-VirtualInstrumentValue = TypeVar("VirtualInstrumentValue", int, float, str, bool)
+type VirtualInstrumentValueTypes = int | float | str | bool
+VirtualInstrumentValue = TypeVar(
+    "VirtualInstrumentValue", bound=VirtualInstrumentValueTypes
+)
 
 
 @dataclass

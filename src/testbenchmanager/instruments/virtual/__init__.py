@@ -7,3 +7,6 @@ from .virtual_instrument_registry import (
 )
 from .virtual_instrument_state import VirtualInstrumentState as VirtualInstrumentState
 from .virtual_instrument_state import VirtualInstrumentValue as VirtualInstrumentValue
+from .virtual_instrument_state import (
+    VirtualInstrumentValueTypes as VirtualInstrumentValueTypes,
+)

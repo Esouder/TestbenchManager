@@ -1,4 +1,6 @@
 # pylint: skip-file
+# TODO: Remove skip-file when possible
+
 
 from typing import Annotated, ClassVar, Protocol
 

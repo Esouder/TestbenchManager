@@ -1,15 +1,15 @@
 """Virtual Instrument implementation."""
 
 import logging
+from collections import deque
 from datetime import datetime
 from queue import Empty, Full, Queue
 from threading import Condition, Event, Lock
 from time import monotonic
-from typing import Callable, Generic, Iterator, Optional
+from typing import Callable, ClassVar, Generic, Iterator, Optional
 
 from pydantic import BaseModel
 
-from testbenchmanager.common.exceptions import TimeoutException
 from testbenchmanager.common.logging import PrefixAdaptor
 
 from .virtual_instrument_state import VirtualInstrumentState, VirtualInstrumentValue
@@ -44,6 +44,8 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         Generic (_type_): Type of the value held by the virtual instrument.
     """
 
+    MAX_HISTORY_LENGTH: ClassVar[int] = 1000
+
     def __init__(
         self,
         metadata: VirtualInstrumentMetadata,
@@ -56,7 +58,9 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         self._subscriber_callbacks: set[
             Callable[[VirtualInstrumentState[VirtualInstrumentValue]], None]
         ] = set()
-        self._state: VirtualInstrumentState[VirtualInstrumentValue]
+        self._history: deque[VirtualInstrumentState[VirtualInstrumentValue]] = deque(
+            maxlen=self.MAX_HISTORY_LENGTH
+        )
         self._state_lock: Lock = Lock()
         self._condition: Condition = Condition(self._state_lock)
         self._sequence: int = 0
@@ -65,6 +69,32 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
         ] = set()
 
         self._command_callback = command_callback
+
+    @property
+    def _state(self) -> VirtualInstrumentState[VirtualInstrumentValue]:
+        """Internal getter for current state
+
+        Raises:
+            RuntimeError: The virtual instrument has no state yet.
+
+        Returns:
+            VirtualInstrumentState[VirtualInstrumentValue]: The current state of the virtual instrument.
+        """
+        if len(self._history) > 0:
+            return self._history[-1]
+        else:
+            raise RuntimeError("VirtualInstrument has no state yet")
+
+    @property
+    def history(self) -> list[VirtualInstrumentState[VirtualInstrumentValue]]:
+        """
+        Get the history of states for this virtual instrument.
+
+        Returns:
+            list[VirtualInstrumentState[VirtualInstrumentValue]]: List of historical states.
+        """
+        with self._state_lock:
+            return list(self._history)
 
     @property
     def value(self) -> VirtualInstrumentValue:
@@ -107,7 +137,7 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
             state = VirtualInstrumentState(
                 value=value, sequence=self._sequence, timestamp=datetime.now()
             )
-            self._state = state
+            self._history.append(state)
             self._sequence += 1
             self._condition.notify_all()
 
@@ -182,7 +212,7 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
             Defaults to None.
 
         Raises:
-            TimeoutException: If the timeout is reached before the predicate returns true.
+            TimeoutError: If the timeout is reached before the predicate returns true.
 
         Returns:
             VirtualInstrumentState[T]: State of the virtual instrument when the predicate returned
@@ -197,7 +227,7 @@ class VirtualInstrument(Generic[VirtualInstrumentValue]):
                 if timeout is not None:
                     remaining = timeout - (monotonic() - start_time)
                     if remaining <= 0:
-                        raise TimeoutException()
+                        raise TimeoutError()
                     self._condition.wait(timeout=remaining)
                 else:
                     self._condition.wait()
