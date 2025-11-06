@@ -36,3 +36,6 @@ allow-reexport-from-package = true
 [tool.pyright]
 reportMissingTypeStubs = "none"
 typeCheckingMode = "strict"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
