@@ -6,8 +6,12 @@ authors = [
     {name = "Eric",email = "eric@souder.ca"}
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<4.0"
 dependencies = [
+    "fastapi (>=0.118.0,<0.119.0)",
+    "pydantic (>=2.11.9,<3.0.0)",
+    "epcomms @ file:///C:/Users/ericj/EPComms/dist/epcomms-1.3.0-py3-none-any.whl",
+    "uvicorn (>=0.38.0,<0.39.0)",
 ]
 
 [dependency-groups]
@@ -25,3 +29,13 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+
+[tool.pylint.imports]
+allow-reexport-from-package = true
+
+[tool.pyright]
+reportMissingTypeStubs = "none"
+typeCheckingMode = "strict"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
