@@ -160,28 +160,29 @@ files = [
 
 [[package]]
 name = "epcomms"
-version = "1.3.0"
+version = "1.3.1"
 description = ""
 optional = false
-python-versions = ">=3.12,<4.0"
+python-versions = "^3.12"
 groups = ["main"]
-files = [
-    {file = "epcomms-1.3.0-py3-none-any.whl", hash = "sha256:b86831a236644a4ec504174e3bcb976e222961dcbd7f2f3d687eb6db50f47033"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-numpy = ">=2.3.4,<3.0.0"
-psutil = ">=7.0.0,<8.0.0"
-pycomm3 = ">=1.2.14,<2.0.0"
-pyserial = ">=3.5,<4.0"
-pyvisa = ">=1.14.1,<2.0.0"
-pyvisa-py = ">=0.7.2,<0.8.0"
-websockets = ">=14.2,<15.0"
-zeroconf = ">=0.145.1,<0.146.0"
+numpy = "^2.3.4"
+psutil = "^7.0.0"
+pycomm3 = "^1.2.14"
+pyserial = "^3.5"
+pyvisa = "^1.14.1"
+pyvisa-py = "^0.7.2"
+websockets = "^14.2"
+zeroconf = "^0.145.1"
 
 [package.source]
-type = "file"
-url = "../EPComms/dist/epcomms-1.3.0-py3-none-any.whl"
+type = "git"
+url = "ssh://git@github.com/Electric-Propulsion/EPComms.git"
+reference = "v1.3.1"
+resolved_reference = "e2ea3cd8e515f8c5983ac8184e7f0d771cbe1e19"
 
 [[package]]
 name = "fastapi"
@@ -1105,4 +1106,4 @@ ifaddr = ">=0.1.7"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "dccb0e234e3391856e163d10d78ea8e34590fc59211af4baf612c545bf3794d5"
+content-hash = "ffa2d7f1095b9c8bbeabca9bd0833c5b8850e3ebbe46c9db4d9f9c0f4a1fdf1f"
