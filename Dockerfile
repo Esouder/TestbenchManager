@@ -4,6 +4,8 @@
 # Use a full Python image to install build dependencies
 FROM python:3.12-slim AS builder
 
+ARG GITHUB_TOKEN
+
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         git \
@@ -30,9 +32,14 @@ RUN pip install poetry==2.2.0
 # Copy pyproject.toml and poetry.lock to leverage Docker cache
 COPY pyproject.toml poetry.lock ./
 
-# Install project dependencies (excluding dev dependencies)
-RUN --mount=type=ssh \
-    poetry install --no-root --only main
+RUN git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/" \
+    && poetry install --no-root --only main \
+    # CRITICAL: Remove credentials immediately
+    && git config --global --unset-all url."https://${GITHUB_TOKEN}@github.com/".insteadOf
+
+# # Install project dependencies (excluding dev dependencies)
+# RUN --mount=type=ssh \
+#     poetry install --no-root --only main
 
 # --- Runtime Stage ---
 # Use a slim, secure image for the final deployment

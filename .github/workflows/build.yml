@@ -73,6 +73,6 @@ jobs:
           cache-to: type=gha,mode=max
           # Pass the PAT securely for the private dependency pull (HTTPS method)
           build-args: |
-            GITHUB_TOKEN=${{ secrets.GH_ACCESS_TOKEN }}
+            GITHUB_TOKEN=${{ secrets.EPCOMMS_DEPLOY_KEY  }}
 
           
