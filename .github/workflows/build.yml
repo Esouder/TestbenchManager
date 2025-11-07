@@ -9,12 +9,6 @@ on:
     branches:
       - master
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build from'
-        required: true
-        default: 'master'
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: testbenchmanager-dev
