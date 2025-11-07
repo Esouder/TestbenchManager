@@ -14,8 +14,6 @@ RUN apt-get update \
 
 RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
 
-RUN --mount=type=ssh ssh -vT git@github.com
-
 # Set environment variables for Poetry
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
