@@ -180,7 +180,7 @@ zeroconf = "^0.145.1"
 
 [package.source]
 type = "git"
-url = "ssh://git@github.com/Electric-Propulsion/EPComms.git"
+url = "https://github.com/Electric-Propulsion/EPComms.git"
 reference = "v1.3.1"
 resolved_reference = "e2ea3cd8e515f8c5983ac8184e7f0d771cbe1e19"
 
@@ -1106,4 +1106,4 @@ ifaddr = ">=0.1.7"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "bd40bf4df814dbb969f49d4ba0fd3b5f6a67567c17d5d0acd69d5a171d053549"
+content-hash = "47e27bbe006f4cf945f09d03fb5d7414861629a5712df5c347f78a85258b8b30"
