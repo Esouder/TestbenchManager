@@ -10,7 +10,7 @@ requires-python = ">=3.12,<4.0"
 dependencies = [
     "fastapi (>=0.118.0,<0.119.0)",
     "pydantic (>=2.11.9,<3.0.0)",
-    "epcomms @ git+ssh://git@github.com:Electric-Propulsion/EPComms.git@v1.3.1",
+    "epcomms @ git+http://github.com:Electric-Propulsion/EPComms.git@v1.3.1",
     "uvicorn (>=0.38.0,<0.39.0)",
 ]
 
