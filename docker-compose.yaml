@@ -7,13 +7,22 @@ services:
       - "8000:8000"
     volumes:
       - ../TestbenchConfigs:/configs
-    # This overrides the CMD in the Dockerfile if needed
     command: ["--config-root", "/configs"]
     restart: unless-stopped
 
-  # tunnel:
-  #   image: cloudflare/cloudflared:latest
-  #   restart: unless-stopped
-  #   command: tunnel --no-autoupdate run --token ${CLOUD_FLARE_TOKEN}
-  #   depends_on:
-  #     - app
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    secrets:
+      - cloudflare_token
+    environment:
+      - TUNNEL_TOKEN_FILE=/run/secrets/cloudflare_token
+    command: tunnel --no-autoupdate run
+    depends_on:
+      - app
+
+
+
+secrets:
+  cloudflare_token:
+    file: cloudflared.secret
