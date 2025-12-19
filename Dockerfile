@@ -1,3 +1,4 @@
+
 # --- Build Stage ---
 FROM python:3.12-slim AS builder
 
@@ -35,3 +36,5 @@ RUN ls -l /venv/bin/python
 
 # 8. Entrypoint
 ENTRYPOINT ["/venv/bin/python", "-m", "testbenchmanager.main"]
+
+LABEL org.opencontainers.image.source=https://github.com/Esouder/testbenchmanager
