@@ -12,9 +12,15 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
         - name: Checkout Code
           uses: actions/checkout@v4
+
+        - name: Extract metadata
+          run: |
+            VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)
+            echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
 
         - name: Log in to GHCR
           uses: docker/login-action@v3
@@ -29,8 +35,18 @@ jobs:
 
         - name: Build and Push Image
           run: |
-            docker build . -t ${{ env.IMAGE_ID }}:latest
-            docker push ${{ env.IMAGE_ID }}:latest
+            TAG_LATEST=${{ env.IMAGE_ID }}:latest
+            TAG_VERSION=${{ env.IMAGE_ID }}:${{ env.APP_VERSION }}
+            TAG_SHA=${{ env.IMAGE_ID }}:${{ env.SHORT_SHA }}
+
+            - name: Build and Push
+            docker build . \
+              -t ${{ env.IMAGE_ID }}:latest \
+              -t ${{ env.IMAGE_ID }}:${{ env.APP_VERSION }} \
+              -t ${{ env.IMAGE_ID }}:${{ env.SHORT_SHA }}
+
+            docker push ${{ env.IMAGE_ID }} --all-tags
+            
       # - name: Login to Azure
       #   uses: azure/login@v1
       #   with:
