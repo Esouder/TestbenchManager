@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../TestbenchConfigs:/configs
+    # This overrides the CMD in the Dockerfile if needed
+    command: ["--config-root", "/configs"]
+    restart: unless-stopped
+
+  # tunnel:
+  #   image: cloudflare/cloudflared:latest
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${CLOUD_FLARE_TOKEN}
+  #   depends_on:
+  #     - app
