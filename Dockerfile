@@ -1,51 +1,40 @@
-# syntax=docker/dockerfile:1.7-labs
 
-# --- Builder Stage ---
-# Use a full Python image to install build dependencies
+# --- Build Stage ---
 FROM python:3.12-slim AS builder
 
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-        git \
-        openssh-client \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
-
-RUN --mount=type=ssh ssh -vT git@github.com
-
-# Set environment variables for Poetry
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+# 1. Install git (Required for your 'epcomms' dependency)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git
 
 WORKDIR /app
 
-# Install Poetry itself
-RUN pip install poetry==2.2.0
+# 2. Create a dedicated virtual environment for Poetry tools
+#    This keeps Poetry's dependencies completely separate from your app's.
+RUN python -m venv /opt/poetry-tools
 
-# Copy pyproject.toml and poetry.lock to leverage Docker cache
-COPY pyproject.toml poetry.lock ./
+# 3. Install Poetry + Plugin into that isolated tool venv
+RUN /opt/poetry-tools/bin/pip install --no-cache-dir poetry poetry-plugin-bundle
 
-# Install project dependencies (excluding dev dependencies)
-RUN --mount=type=ssh \
-    poetry install --no-root --only main
+# 4. Copy project files
+COPY pyproject.toml poetry.lock README.md ./
+COPY src ./src
+
+# 5. Run the bundle command using the ISOLATED poetry executable
+#    --python=/usr/local/bin/python ensures the bundled venv targets the main Docker python
+RUN /opt/poetry-tools/bin/poetry bundle venv --only=main --python=/usr/local/bin/python /venv
 
 # --- Runtime Stage ---
-# Use a slim, secure image for the final deployment
 FROM python:3.12-slim AS runtime
-
-# Copy the virtual environment and source code from the builder stage
-COPY --from=builder /app/.venv /app/.venv
-COPY . /app
-
-# Set the PATH to include the virtual environment's bin directory
-ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 
-CMD ["python", "src/testbenchmanager/main.py"]
+# 6. Copy the bundled environment
+COPY --from=builder /venv /venv
+
+# 7. Verify the symlink (It should point to /usr/local/bin/python)
+RUN ls -l /venv/bin/python
+
+# 8. Entrypoint
+ENTRYPOINT ["/venv/bin/python", "-m", "testbenchmanager.main"]
+
+LABEL org.opencontainers.image.source=https://github.com/Esouder/testbenchmanager
