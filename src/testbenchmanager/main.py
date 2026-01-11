@@ -9,7 +9,9 @@ import uvicorn
 
 from testbenchmanager.api import api
 from testbenchmanager.configuration import ConfigurationManager, ConfigurationScope
-from testbenchmanager.instruments import InstrumentConfiguration, InstrumentManager
+from testbenchmanager.experiments.experiment_manager import experiment_manager
+from testbenchmanager.experiments.steps import *  # Ensure steps are registered
+from testbenchmanager.instruments import InstrumentConfiguration, instrument_manager
 from testbenchmanager.instruments.translation.translators import *  # Ensure translators are registered
 
 parser = argparse.ArgumentParser(description="Testbench Manager")
@@ -38,19 +40,20 @@ if __name__ == "__main__":
     instrument_config_dir = config_manager.get_configuration_directory(
         ConfigurationScope.INSTRUMENTS
     )
-    instrument_manager_instance = InstrumentManager()
 
     instrument_config = InstrumentConfiguration.model_validate(
         instrument_config_dir.get_contents(instrument_config_dir.configuration_uids[0])
     )
 
-    instrument_manager_instance.load_from_configuration(instrument_config)
+    instrument_manager.load_from_configuration(instrument_config)
 
     logger.info("Loaded instrument configuration: %s", instrument_config.name)
+
+    experiment_manager.inject_configuration_manager(config_manager)
 
     # Keep the application running to allow translators to operate
     try:
         uvicorn.run(api, host="0.0.0.0", port=8000)
     except KeyboardInterrupt:
         logger.info("Shutting down Testbench Manager.")
-        instrument_manager_instance.stop_all_translators()
+        instrument_manager.stop_all_translators()

@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routes import instrument_router
+from .routes import experiment_router, instrument_router, run_router
 from .routes.tea import tea_router
 
 api = FastAPI()
@@ -23,3 +23,5 @@ api.add_middleware(
 
 api.include_router(instrument_router)
 api.include_router(tea_router)
+api.include_router(experiment_router)
+api.include_router(run_router)

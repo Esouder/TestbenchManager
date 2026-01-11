@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
 
-from testbenchmanager.api.transmission_structures import (
+from testbenchmanager.api.transmission_structures.instrument import (
     InstrumentStateTransmissionStructure,
     InstrumentTransmissionStructure,
 )

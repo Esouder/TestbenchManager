@@ -9,6 +9,7 @@ from .configuration_directory import ConfigurationDirectory
 logger = logging.getLogger(__name__)
 
 
+# TODO: Should probably register these at runtime.
 class ConfigurationScope(str, Enum):
     """
     Enumeration of configuration scopes.
@@ -16,6 +17,7 @@ class ConfigurationScope(str, Enum):
     """
 
     INSTRUMENTS = "instruments"
+    EXPERIMENTS = "experiments"
 
 
 # pylint: disable=too-few-public-methods
