@@ -16,6 +16,7 @@ class ConfigurationScope(str, Enum):
     """
 
     INSTRUMENTS = "instruments"
+    REPORTS = "reports"
 
 
 # pylint: disable=too-few-public-methods

@@ -11,6 +11,8 @@ from testbenchmanager.api import api
 from testbenchmanager.configuration import ConfigurationManager, ConfigurationScope
 from testbenchmanager.instruments import InstrumentConfiguration, InstrumentManager
 from testbenchmanager.instruments.translation.translators import *  # Ensure translators are registered
+from testbenchmanager.report_generator.report_configuartion import ReportConfiguration
+from testbenchmanager.report_generator.report_manager import ReportManager
 
 parser = argparse.ArgumentParser(description="Testbench Manager")
 parser.add_argument(
@@ -47,6 +49,13 @@ if __name__ == "__main__":
     instrument_manager_instance.load_from_configuration(instrument_config)
 
     logger.info("Loaded instrument configuration: %s", instrument_config.name)
+
+    report_config = ReportConfiguration.model_validate(
+        config_manager.get_configuration_directory(
+            ConfigurationScope.REPORTS
+        ).get_contents(instrument_config_dir.configuration_uids[0])
+    )
+    report_manager_instance = ReportManager(report_config)
 
     # Keep the application running to allow translators to operate
     try:
