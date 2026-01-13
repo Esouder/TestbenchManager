@@ -37,14 +37,7 @@ class ExperimentManager:
             raise RuntimeError(
                 "Configuration manager not injected. Cannot list experiments."
             )
-        return [
-            uid
-            for uid in self._config_dir.configuration_uids
-            if uid
-            == ExperimentConfiguration.model_validate(
-                self._config_dir.get_contents(uid)
-            ).metadata.uid
-        ]
+        return self._config_dir.configuration_uids
 
     def build_experiment_config(
         self, configuration_uid: str
@@ -80,7 +73,7 @@ class ExperimentManager:
         run_uid = self._generate_run_uid()
         experiment = ExperimentRun(
             self.build_experiment_config(configuration_uid),
-            ExperimentContext(run_uid=run_uid),
+            ExperimentContext(run_uid=run_uid, configuration_uid=configuration_uid),
         )
         run_registry.register(run_uid, experiment)
 

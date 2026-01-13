@@ -6,7 +6,6 @@ from .step_configuration import StepConfiguration
 
 
 class ExperimentMetadata(BaseModel):
-    uid: str
     name: str
     description: str | None = None
 
@@ -17,7 +16,7 @@ class ExperimentConfiguration(BaseModel):
     metadata: ExperimentMetadata
 
     steps: Annotated[
-        list[StepConfiguration],
+        dict[str, StepConfiguration],
         Field(
             default_factory=list,
             description="List of steps to be executed in the experiment.",
