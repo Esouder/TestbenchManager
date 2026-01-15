@@ -22,12 +22,11 @@ def list_experiments() -> list[str]:
 @experiment_router.get("/{uid}/")
 def get_experiment_info(uid: str) -> ExperimentInfoTransmissionStructure:
 
-    experiment = experiment_manager.get_experiment(uid)
+    disposable_run = experiment_manager.build_experiment(uid)
+
     return ExperimentInfoTransmissionStructure(
-        uid=experiment.metadata.uid,
-        name=experiment.metadata.name,
-        description=experiment.metadata.description,
-        steps=[step.metadata.uid for step in experiment.steps],
+        metadata=disposable_run.experiment_metadata,
+        steps=list(disposable_run.steps.keys()),
     )
 
 
@@ -44,7 +43,7 @@ def start_experiment_run(uid: str) -> str:
     """
     try:
         run_uid = experiment_manager.add_experiment(uid)
-        experiment_manager.run_experiment(uid)
+        experiment_manager.run_experiment(run_uid)
         return run_uid
     except FileNotFoundError as e:
         raise HTTPException(

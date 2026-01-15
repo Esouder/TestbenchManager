@@ -25,7 +25,8 @@ class ExperimentRun:
         self.steps: dict[str, Step[StepConfiguration]] = {}
         self._abort: bool = False
         self._stop_method: Callable[[], None] | None = None
-        self.state: ExperimentState = ExperimentState.READY
+        self._state: ExperimentState = ExperimentState.READY
+        self._state_subscriber_callbacks: list[Callable[[ExperimentState], None]] = []
         self.current_step: Step[StepConfiguration] | None = None
 
         self.start_time: datetime | None = None
@@ -71,6 +72,26 @@ class ExperimentRun:
                     continue
 
             self.steps[step.metadata.uid] = step
+
+    @property
+    def state(self) -> ExperimentState:
+        return self._state
+
+    @state.setter
+    def state(self, value: ExperimentState) -> None:
+        self._state = value
+        for callback in self._state_subscriber_callbacks:
+            callback(value)
+
+    def subscribe_to_state_changes(
+        self, callback: Callable[[ExperimentState], None]
+    ) -> Callable[[], None]:
+        self._state_subscriber_callbacks.append(callback)
+
+        def unsubscribe() -> None:
+            self._state_subscriber_callbacks.remove(callback)
+
+        return unsubscribe
 
     def run(self) -> None:
         if self.state == ExperimentState.MALFORMED:

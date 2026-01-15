@@ -1,3 +1,6 @@
+from multiprocessing import Event
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from testbenchmanager.api.transmission_structures.experiment import (
@@ -5,6 +8,7 @@ from testbenchmanager.api.transmission_structures.experiment import (
     StepInfoTransmissionStructure,
 )
 from testbenchmanager.experiments.experiment_manager import experiment_manager
+from testbenchmanager.experiments.experiment_state import ExperimentState
 from testbenchmanager.experiments.run_registry import run_registry
 
 run_router = APIRouter(prefix="/run")
@@ -27,7 +31,7 @@ def get_run_info(uid: str) -> RunInfoTransmissionStructure:
     run = run_registry.get(uid)
     return RunInfoTransmissionStructure(
         uid=uid,
-        experiment_uid=run.experiment_metadata.uid,
+        experiment_metadata=run.experiment_metadata,
         state=run.state,
         start_time=run.start_time.isoformat() if run.start_time else None,
         end_time=run.end_time.isoformat() if run.end_time else None,
@@ -55,7 +59,9 @@ def list_run_steps(uid: str) -> list[str]:
 
 
 @run_router.get("/{uid}/step/{step_uid}/")
-def get_run_step_info(uid: str, step_uid: str) -> StepInfoTransmissionStructure:
+def get_run_step_info(
+    uid: str, step_uid: str, change: bool = False, timeout: Optional[float] = None
+) -> StepInfoTransmissionStructure:
     """
     Get information about a specific step in an experiment run.
 
@@ -69,9 +75,34 @@ def get_run_step_info(uid: str, step_uid: str) -> StepInfoTransmissionStructure:
     try:
         run = run_registry.get(uid)
         step = run.steps[step_uid]
+        if change:
+            if run.current_step and run.current_step.metadata.uid == step_uid:
+                # Wait for the step to complete
+                step_completed_event = Event()
+
+                def check_step_state(state: ExperimentState) -> None:
+                    if (
+                        state != ExperimentState.RUNNING
+                        or run.current_step is None
+                        or run.current_step.metadata.uid != step_uid
+                    ):
+                        step_completed_event.set()
+
+                unsubscribe = run.subscribe_to_state_changes(check_step_state)
+                if (
+                    run.state == ExperimentState.RUNNING
+                    and run.current_step
+                    and run.current_step.metadata.uid == step_uid
+                ):
+                    try:
+                        step_completed_event.wait(timeout=timeout)
+                    except TimeoutError as e:
+                        raise HTTPException(
+                            status_code=status.HTTP_408_REQUEST_TIMEOUT
+                        ) from e
+                unsubscribe()
         return StepInfoTransmissionStructure(
-            uid=step.metadata.uid,
-            name=step.metadata.name,
+            metadata=step.metadata,
             state=step.state,
             start_time=step.start_time.isoformat() if step.start_time else None,
             end_time=step.end_time.isoformat() if step.end_time else None,
