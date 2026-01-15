@@ -8,11 +8,12 @@ from .report_publisher_registry import report_publisher_registry
 
 
 class ReportManager:
-    def __init__(self, configuration: ReportConfiguration):
+    def load_from_configuration(self, configuration: ReportConfiguration):
         #TODO: some try/catch in here
         self._base_working_directory = configuration.working_directory
-        self._publishers: list[ReportPublisher[BaseModel]] = []
+        self._publishers: list[ReportPublisher[BaseModel]] = [] 
         for publisher_name, publisher_config in configuration.publishers.items():
+            print(report_publisher_registry.keys)
             publisher_cls = report_publisher_registry.get(publisher_name)
             if not publisher_cls:
                 raise ValueError(f"Unknown report publisher: {publisher_name}")
@@ -24,7 +25,8 @@ class ReportManager:
         publish_callbacks = [publisher.publish for publisher in self._publishers]
         return Report(self._base_working_directory, metadata, publish_callbacks)
     
-    
+report_manager = ReportManager()  # global singleton instance
+
 
 
     
