@@ -1,11 +1,11 @@
 from datetime import datetime
-from multiprocessing import Event
+from threading import Event
 from time import monotonic, sleep
 
+from testbenchmanager.experiments.state import Outcome, State
 from testbenchmanager.experiments.step import BaseStep
 from testbenchmanager.experiments.step_configuration import StepConfiguration
 from testbenchmanager.experiments.step_registry import step_registry
-from testbenchmanager.experiments.step_state import StepState
 
 
 class WaitConfiguration(StepConfiguration):
@@ -20,24 +20,20 @@ class Wait(BaseStep):
 
     def __init__(self, config: WaitConfiguration) -> None:
         self._duration = config.duration
-        self._stop_event = Event()
         super().__init__(config)
 
-    def execute(self) -> None:
-        self._state = StepState.RUNNING
+    def execute(self, abort_event: Event) -> None:
+        self.state = State.RUNNING
         self.start_time = datetime.now()
         timer_start = monotonic()
-        while (
-            not self._stop_event.is_set()
-            and (monotonic() - timer_start) < self._duration
-        ):
+        while not abort_event.is_set() and (monotonic() - timer_start) < self._duration:
             sleep(0.1)
         self.end_time = datetime.now()
-        self._state = StepState.COMPLETED
 
-    def stop(self) -> None:
-        self._stop_event.set()
-        self._state = StepState.STOPPING
+        self.state = State.COMPLETE
+        self.outcome = (
+            Outcome.SUCCEEDED if not abort_event.is_set() else Outcome.ABORTED
+        )
 
     def instrument_uids(self) -> list[str]:
         return []

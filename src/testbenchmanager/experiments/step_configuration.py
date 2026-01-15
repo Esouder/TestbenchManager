@@ -14,6 +14,14 @@ class StepConfiguration(BaseModel):
     """Base Configuration Model for Translators"""
 
     metadata: StepMetadata
+    skip_on_previous_failure: bool = Field(
+        default=False,
+        description="If true, this step will be skipped if a previous step has failed.",
+    )
+    skip_on_abort: bool = Field(
+        default=True,
+        description="If true, this step will be skipped if the experiment run is aborted.",
+    )
     class_name: Annotated[
         str, Field(validation_alias=AliasChoices("class", "class_name"))
     ]

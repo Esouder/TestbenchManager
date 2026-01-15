@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import Generic, Protocol, TypeVar
+from threading import Event
+from typing import Callable, Generic, Protocol, TypeVar
 
+from .generic_stateful import GenericStateful
+from .state import Outcome, State
 from .step_configuration import StepConfiguration, StepMetadata
-from .step_state import StepState
 
 ConfigurationType = TypeVar(
     "ConfigurationType", bound=StepConfiguration, covariant=True
@@ -11,16 +13,23 @@ ConfigurationType = TypeVar(
 
 class Step(Protocol, Generic[ConfigurationType]):
 
-    _metadata: StepMetadata
-
     @classmethod
     def configuration(cls) -> type[ConfigurationType]: ...
 
     @property
-    def metadata(self) -> StepMetadata: ...
+    def outcome(self) -> Outcome | None: ...
+
+    @outcome.setter
+    def outcome(self, value: Outcome | None) -> None: ...
 
     @property
-    def state(self) -> StepState: ...
+    def state(self) -> State: ...
+
+    @state.setter
+    def state(self, value: State) -> None: ...
+
+    @property
+    def metadata(self) -> StepMetadata: ...
 
     @property
     def start_time(self) -> datetime | None: ...
@@ -28,31 +37,34 @@ class Step(Protocol, Generic[ConfigurationType]):
     @property
     def end_time(self) -> datetime | None: ...
 
-    def __init__(self, config: ConfigurationType) -> None: ...
-    def execute(self) -> None:
-        """Execute the step."""
-        ...
+    @property
+    def skip_on_previous_failure(self) -> bool: ...
 
-    def stop(self) -> None:
-        """Stop the step execution if it's running."""
+    @property
+    def skip_on_abort(self) -> bool: ...
+
+    def __init__(self, config: ConfigurationType) -> None: ...
+
+    def execute(self, abort_event: Event) -> None:
+        """Execute the step."""
         ...
 
     def instrument_uids(self) -> list[str]:
         """Return a list of virtual instrument UIDs used by this step."""
         ...
 
+    def subscribe_to_state_change(
+        self, callback: Callable[[State], None]
+    ) -> Callable[[], None]: ...
 
-class BaseStep:
+
+class BaseStep(GenericStateful):
+    outcome: Outcome | None
+
     def __init__(self, config: StepConfiguration) -> None:
-        self._metadata = config.metadata
-        self._state = StepState.PENDING
+        super().__init__()
+        self.metadata = config.metadata
         self.start_time: datetime | None = None
         self.end_time: datetime | None = None
-
-    @property
-    def metadata(self) -> StepMetadata:
-        return self._metadata
-
-    @property
-    def state(self) -> StepState:
-        return self._state
+        self.skip_on_previous_failure = config.skip_on_previous_failure
+        self.skip_on_abort = config.skip_on_abort

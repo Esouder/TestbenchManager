@@ -1,32 +1,42 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 from testbenchmanager.experiments.experiment_configuration import ExperimentMetadata
-from testbenchmanager.experiments.experiment_state import ExperimentState
+from testbenchmanager.experiments.state import Outcome, State
 from testbenchmanager.experiments.step_configuration import StepMetadata
-from testbenchmanager.experiments.step_state import StepState
 
 
-class ExperimentInfoTransmissionStructure(BaseModel):
-    """Transmission structure for experiment information."""
-
-    metadata: ExperimentMetadata
-    steps: list[str]  # List of step UIDs
-
-
-class RunInfoTransmissionStructure(BaseModel):
-    """Transmission structure for experiment run information."""
-
-    uid: str
-    experiment_metadata: ExperimentMetadata
-    state: ExperimentState
-    start_time: str | None = None
-    end_time: str | None = None
-
-
-class StepInfoTransmissionStructure(BaseModel):
-    """Transmission structure for step information."""
+class StepConfigurationTransmissionStructure(BaseModel):
+    """Transmission structure for step configuration."""
 
     metadata: StepMetadata
-    state: StepState
-    start_time: str | None = None
-    end_time: str | None = None
+    skip_on_previous_failure: bool
+    skip_on_abort: bool
+
+
+class ExperimentConfigurationTransmissionStructure(BaseModel):
+    """Transmission structure for experiment configuration."""
+
+    metadata: ExperimentMetadata
+    steps: dict[str, StepConfigurationTransmissionStructure]
+
+
+class ExperimentRunTransmissionStructure(BaseModel):
+    """Transmission structure for experiment run."""
+
+    configuration_uid: str
+    state: State
+    outcome: Outcome | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+
+
+class StepRunTransmissionStructure(BaseModel):
+    """Transmission structure for step run."""
+
+    confguration_uid: str
+    state: State
+    outcome: Outcome | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None

@@ -1,11 +1,12 @@
 import logging
 from datetime import datetime
-from typing import Callable
+from threading import Event, Lock
 
 from testbenchmanager.instruments.virtual import virtual_instrument_registry
 
 from .experiment_context import ExperimentContext as ExperimentContext
-from .experiment_state import ExperimentState
+from .generic_stateful import GenericStateful
+from .state import Outcome, State
 from .step import Step
 from .step_configuration import StepConfiguration
 from .step_registry import step_registry
@@ -16,18 +17,16 @@ logger = logging.getLogger(__name__)
 from .experiment_configuration import ExperimentConfiguration
 
 
-class ExperimentRun:
+class ExperimentRun(GenericStateful):
     def __init__(
         self, config: ExperimentConfiguration, context: ExperimentContext
     ) -> None:
+        super().__init__()
         self._context = context
-        self.experiment_metadata = config.metadata
+        self.configuration_uid = config.metadata.uid
         self.steps: dict[str, Step[StepConfiguration]] = {}
-        self._abort: bool = False
-        self._stop_method: Callable[[], None] | None = None
-        self._state: ExperimentState = ExperimentState.READY
-        self._state_subscriber_callbacks: list[Callable[[ExperimentState], None]] = []
-        self.current_step: Step[StepConfiguration] | None = None
+        self._abort: Event = Event()
+        self._abort_lock: Lock = Lock()
 
         self.start_time: datetime | None = None
         self.end_time: datetime | None = None
@@ -41,8 +40,10 @@ class ExperimentRun:
                     step_config.class_name,
                     e,
                 )
-                self.state = ExperimentState.MALFORMED
-                continue
+
+                raise RuntimeError(
+                    f"Step class '{step_config.class_name}' not found in registry."
+                ) from e
             step_config = step_class.configuration().model_validate(
                 step_config.model_dump()
             )
@@ -54,8 +55,7 @@ class ExperimentRun:
                     step_config.class_name,
                     e,
                 )
-                self.state = ExperimentState.MALFORMED
-                continue
+                raise e
 
             for uid in step.instrument_uids():
                 try:
@@ -68,55 +68,61 @@ class ExperimentRun:
                         step_config.class_name,
                         e,
                     )
-                    self.state = ExperimentState.MALFORMED
-                    continue
+                    raise RuntimeError(
+                        f"Virtual instrument with UID '{uid}' used in step "
+                        f"'{step_config.class_name}' not found in registry."
+                    ) from e
 
             self.steps[step.metadata.uid] = step
 
-    @property
-    def state(self) -> ExperimentState:
-        return self._state
-
-    @state.setter
-    def state(self, value: ExperimentState) -> None:
-        self._state = value
-        for callback in self._state_subscriber_callbacks:
-            callback(value)
-
-    def subscribe_to_state_changes(
-        self, callback: Callable[[ExperimentState], None]
-    ) -> Callable[[], None]:
-        self._state_subscriber_callbacks.append(callback)
-
-        def unsubscribe() -> None:
-            self._state_subscriber_callbacks.remove(callback)
-
-        return unsubscribe
-
     def run(self) -> None:
-        if self.state == ExperimentState.MALFORMED:
-            raise RuntimeError("Cannot run malformed experiment.")
-        self.state = ExperimentState.RUNNING
+        self.state = State.RUNNING
         for step in self.steps.values():
-            self.current_step = step
-            self._stop_method = step.stop
-            if self._abort:
-                logger.info("Experiment run stopped before executing step '%s'.", step)
-                break
+            with self._abort_lock:
+                if self._abort.is_set():
+                    if step.skip_on_abort:
+                        logger.info(
+                            "Skipping step '%s' due to experiment abort.",
+                            step.metadata.uid,
+                        )
+                        step.state = State.COMPLETE
+                        step.outcome = Outcome.SKIPPED
+                        continue
+                elif (
+                    step.skip_on_previous_failure
+                    and self._get_total_outcome() == Outcome.FAILED
+                ):
+                    logger.info(
+                        "Skipping step '%s' due to previous step failure.",
+                        step.metadata.uid,
+                    )
+                    step.state = State.COMPLETE
+                    step.outcome = Outcome.SKIPPED
+                    continue
             try:
-                step.execute()
+                step.execute(self._abort)
             except Exception as e:
                 logger.error("Error occurred during step execution: %s", e)
-                # Not sure if this should abort the entire experiment or continue to next step.
-                break
+                step.state = State.COMPLETE
+                step.outcome = Outcome.FAILED
+                continue
 
-        if self._abort:
-            self.state = ExperimentState.ABORTED
-        else:
-            self.state = ExperimentState.COMPLETED
+        self.outcome = self._get_total_outcome()
+        self.state = State.COMPLETE
+        self.end_time = datetime.now()
+
+    def _get_total_outcome(self) -> Outcome:
+        if self._abort.is_set():
+            return Outcome.ABORTED
+        for step in self.steps.values():
+            if step.outcome == Outcome.FAILED:
+                return Outcome.FAILED
+            if step.outcome == Outcome.ABORTED:
+                return Outcome.ABORTED
+            if step.outcome == Outcome.SUCCEEDED_WITH_WARNINGS:
+                return Outcome.SUCCEEDED_WITH_WARNINGS
+        return Outcome.SUCCEEDED
 
     def stop(self) -> None:
-        self._abort = True
-        self.state = ExperimentState.STOPPING
-        if self._stop_method is not None:
-            self._stop_method()
+        self._abort.set()
+        self.state = State.STOPPING

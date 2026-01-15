@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 
 from testbenchmanager.api.transmission_structures.experiment import (
-    ExperimentInfoTransmissionStructure,
+    ExperimentConfigurationTransmissionStructure,
+    StepConfigurationTransmissionStructure,
 )
 from testbenchmanager.experiments.experiment_manager import experiment_manager
 
@@ -20,30 +21,28 @@ def list_experiments() -> list[str]:
 
 
 @experiment_router.get("/{uid}/")
-def get_experiment_info(uid: str) -> ExperimentInfoTransmissionStructure:
+def get_experiment_configuration(
+    uid: str,
+) -> ExperimentConfigurationTransmissionStructure:
 
-    disposable_run = experiment_manager.build_experiment(uid)
-
-    return ExperimentInfoTransmissionStructure(
-        metadata=disposable_run.experiment_metadata,
-        steps=list(disposable_run.steps.keys()),
+    configuration = experiment_manager.build_experiment_config(uid)
+    return ExperimentConfigurationTransmissionStructure(
+        metadata=configuration.metadata,
+        steps={
+            step.metadata.uid: StepConfigurationTransmissionStructure(
+                metadata=step.metadata,
+                skip_on_previous_failure=step.skip_on_previous_failure,
+                skip_on_abort=step.skip_on_abort,
+            )
+            for step in configuration.steps
+        },
     )
 
 
-@experiment_router.post("/{uid}")
+@experiment_router.post("/{uid}/")
 def start_experiment_run(uid: str) -> str:
-    """
-    Add a new experiment run by UID.
-
-    Args:
-        uid (str): UID of the experiment to add.
-
-    Returns:
-        str: UID of the newly created experiment run.
-    """
     try:
-        run_uid = experiment_manager.add_experiment(uid)
-        experiment_manager.run_experiment(run_uid)
+        run_uid = experiment_manager.run_experiment(uid)
         return run_uid
     except FileNotFoundError as e:
         raise HTTPException(
