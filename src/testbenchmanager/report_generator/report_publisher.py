@@ -8,9 +8,7 @@ T_co = TypeVar("T_co", bound=BaseModel, covariant=True)
 
 
 class ReportPublisher(Protocol, Generic[T_co]):
-    _config: T_co
-    def __init__(self, config: T_co) -> None:
-        self._config = config
+    def __init__(self, config: T_co) -> None: ...
 
     def publish(self, report: Report) -> None:
         ...
