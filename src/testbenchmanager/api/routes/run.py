@@ -45,18 +45,20 @@ async def get_run(
         unsubscribe = run.subscribe_to_state_change(callback)
         try:
             await asyncio.wait_for(event.wait(), timeout=timeout)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             raise HTTPException(
                 status_code=status.HTTP_408_REQUEST_TIMEOUT,
                 detail=f"Timeout waiting for state change on run '{run_uid}'.",
-            )
+            ) from e
         finally:
             unsubscribe()
 
     return ExperimentRunTransmissionStructure(
         configuration_uid=run.configuration_uid,
         state=run.state,
-        # ... rest of fields
+        outcome=run.outcome,
+        start_time=run.start_time,
+        end_time=run.end_time,
     )
 
 
@@ -81,11 +83,33 @@ def list_run_steps(run_uid: str) -> list[str]:
 
 
 @run_router.get("/{run_uid}/step/{step_uid}/")
-def get_run_step(uid: str, step_uid: str) -> StepRunTransmissionStructure:
-    run = run_registry.get(uid)
+async def get_run_step(
+    run_uid: str,
+    step_uid: str,
+    on: SubscriptableTopics | None = None,
+    timeout: float = 30.0,
+) -> StepRunTransmissionStructure:
+    run = run_registry.get(run_uid)
     step = run.steps[step_uid]
+
+    if on == SubscriptableTopics.STATE_CHANGE:
+        event = asyncio.Event()
+
+        def callback(state: State) -> None:
+            event.set()
+
+        unsubscribe = step.subscribe_to_state_change(callback)
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout)
+        except asyncio.TimeoutError as e:
+            raise HTTPException(
+                status_code=status.HTTP_408_REQUEST_TIMEOUT,
+                detail=f"Timeout waiting for state change on run '{run_uid}'.",
+            ) from e
+        finally:
+            unsubscribe()
+
     return StepRunTransmissionStructure(
-        confguration_uid=step.configuration().metadata.uid,
         state=step.state,
         outcome=step.outcome,
         start_time=step.start_time,

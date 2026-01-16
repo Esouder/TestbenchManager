@@ -35,7 +35,6 @@ class ExperimentRunTransmissionStructure(BaseModel):
 class StepRunTransmissionStructure(BaseModel):
     """Transmission structure for step run."""
 
-    confguration_uid: str
     state: State
     outcome: Outcome | None = None
     start_time: datetime | None = None
