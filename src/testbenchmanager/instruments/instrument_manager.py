@@ -84,3 +84,6 @@ class InstrumentManager:
         """
         for translator in self._translators:
             translator.stop()
+
+
+instrument_manager = InstrumentManager()

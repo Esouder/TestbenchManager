@@ -79,7 +79,8 @@ class ExperimentManager:
 
         run_uid = self._generate_run_uid()
         experiment = ExperimentRun(
-            self.build_experiment_config(configuration_uid), ExperimentContext()
+            self.build_experiment_config(configuration_uid),
+            ExperimentContext(run_uid=run_uid),
         )
         run_registry.register(run_uid, experiment)
 

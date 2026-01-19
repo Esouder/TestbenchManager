@@ -3,6 +3,8 @@ from datetime import datetime
 from threading import Event, Lock
 
 from testbenchmanager.instruments.virtual import virtual_instrument_registry
+from testbenchmanager.report_generator.report_manager import report_manager
+from testbenchmanager.report_generator.report_metadata import ReportMetadata
 
 from .experiment_context import ExperimentContext as ExperimentContext
 from .generic_stateful import GenericStateful
@@ -23,6 +25,12 @@ class ExperimentRun(GenericStateful):
     ) -> None:
         super().__init__()
         self._context = context
+        self._report = report_manager.generate_report(
+            ReportMetadata(
+                uid=self._context.run_uid,
+                name=config.metadata.name,
+            )
+        )
         self.configuration_uid = config.metadata.uid
         self.steps: dict[str, Step[StepConfiguration]] = {}
         self._abort: Event = Event()
@@ -77,6 +85,12 @@ class ExperimentRun(GenericStateful):
 
     def run(self) -> None:
         self.state = State.RUNNING
+        self.start_time = datetime.now()
+        for instrument_uid in virtual_instrument_registry.keys:
+            self._report.metadata.start_time = self.start_time
+            self._report.subscribe_to_instrument(
+                virtual_instrument_registry.get(instrument_uid)
+            )
         for step in self.steps.values():
             with self._abort_lock:
                 if self._abort.is_set():
@@ -110,6 +124,8 @@ class ExperimentRun(GenericStateful):
         self.outcome = self._get_total_outcome()
         self.state = State.COMPLETE
         self.end_time = datetime.now()
+        self._report.metadata.end_time = self.end_time
+        self._report.close()
 
     def _get_total_outcome(self) -> Outcome:
         if self._abort.is_set():

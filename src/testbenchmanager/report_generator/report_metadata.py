@@ -7,6 +7,5 @@ class ReportMetadata(BaseModel):
     uid: str
     name: str
     operator: str | list[str] | None = None
-    start_time: datetime
+    start_time: datetime | None = None
     end_time: datetime | None = None
-

@@ -46,7 +46,6 @@ if __name__ == "__main__":
     report_config_dir = config_manager.get_configuration_directory(
         ConfigurationScope.REPORTS
     )
-    instrument_manager_instance = InstrumentManager()
 
     instrument_config = InstrumentConfiguration.model_validate(
         instrument_config_dir.get_contents(instrument_config_dir.configuration_uids[0])

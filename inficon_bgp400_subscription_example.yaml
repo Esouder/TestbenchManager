@@ -1,0 +1,136 @@
+# Example Subscription Translator Configuration for InficonBGP400 Vacuum Gauge
+# 
+# This configuration demonstrates how to use the SubscriptionTranslator to subscribe to
+# real-time updates from an InficonBGP400 vacuum gauge and map the state updates to
+# individual virtual instruments for pressure, emission status, and error messages.
+#
+# NO CHANGES REQUIRED to InficonBGP400 code - uses direct field extraction from InficonBGP400State.
+#
+# Place this file in: config/instruments/
+# Then reference it in your main instrument configuration.
+
+metadata:
+  uid: "inficon_bgp400_translator"
+  name: "Inficon BGP400 Subscription Translator"
+  description: "Subscribes to InficonBGP400 vacuum gauge updates and maps state to virtual instruments"
+
+class_name: "SubscriptionTranslator"
+
+physical_instrument_uid: "inficon_bgp400_physical"
+subscribe_function: "register_subscriber"
+
+# Entity mappings: each entity extracts a specific field from the InficonBGP400State
+# and maps it to a virtual instrument.
+#
+# Use extractor_field for simple attribute extraction (no custom functions needed).
+# Use extractor_function for custom transformations if needed.
+entities:
+  - # Pressure measurement
+    extractor_field: "pressure"  # Extracts state.pressure directly
+    virtual_instrument:
+      uid: "inficon_bgp400_pressure"
+      name: "Vacuum Pressure"
+      unit: "Pa"
+      description: "Pressure reading from Inficon BGP400 vacuum gauge"
+    setter_function: null  # Pressure is read-only
+    setter_arguments: {}
+
+  - # Emission current status
+    extractor_field: "emission"  # Extracts state.emission directly
+    virtual_instrument:
+      uid: "inficon_bgp400_emission"
+      name: "Emission Status"
+      unit: null
+      description: "Emission current status (Off, 25 uA, 5 mA, Degas)"
+    setter_function: null  # Status is read-only
+    setter_arguments: {}
+
+  - # Unit (mbar, Torr, Pa)
+    extractor_field: "unit"  # Extracts state.unit directly
+    virtual_instrument:
+      uid: "inficon_bgp400_unit"
+      name: "Pressure Unit"
+      unit: null
+      description: "Pressure measurement unit (mbar, Torr, Pa)"
+    setter_function: null  # Unit is read-only
+    setter_arguments: {}
+
+  - # Software version
+    extractor_field: "software_version"  # Extracts state.software_version directly
+    virtual_instrument:
+      uid: "inficon_bgp400_software_version"
+      name: "Software Version"
+      unit: null
+      description: "Gauge software version"
+    setter_function: null
+    setter_arguments: {}
+
+  - # Error message
+    extractor_field: "error_msg"  # Extracts state.error_msg directly
+    virtual_instrument:
+      uid: "inficon_bgp400_error"
+      name: "Error Message"
+      unit: null
+      description: "Error status from gauge"
+    setter_function: null
+    setter_arguments: {}
+
+  - # Toggle bit (status indicator)
+    extractor_field: "toggle_bit"  # Extracts state.toggle_bit directly
+    virtual_instrument:
+      uid: "inficon_bgp400_toggle_bit"
+      name: "Toggle Bit"
+      unit: null
+      description: "Toggle bit indicator for state sequencing"
+    setter_function: null
+    setter_arguments: {}
+
+  - # Adjustment status
+    extractor_field: "adjustment"  # Extracts state.adjustment directly
+    virtual_instrument:
+      uid: "inficon_bgp400_adjustment"
+      name: "Adjustment Status"
+      unit: null
+      description: "1000 mbar adjustment status"
+    setter_function: null
+    setter_arguments: {}
+
+
+# NOTES:
+# 
+# SIMPLE FIELD EXTRACTION (recommended):
+# - Use extractor_field with the field name directly (e.g., "pressure")
+# - Supports dot notation for nested attributes (e.g., "meta.version")
+# - No custom methods needed on the physical instrument
+# - Works out-of-the-box with dataclasses, NamedTuples, objects with attributes
+#
+# CUSTOM EXTRACTORS (for complex transformations):
+# - Use extractor_function with a method name on the physical instrument
+# - Pass any additional arguments via extractor_arguments
+# - Example: extractor_function: "convert_pressure_units"
+#           extractor_arguments: {target_unit: "mbar"}
+#
+# COMMAND SUPPORT:
+# - Add setter_function entries to enable commands (e.g., degass_on, set_mbar)
+# - Example:
+#
+#   - # Degas control
+#     extractor_field: "emission"
+#     virtual_instrument:
+#       uid: "inficon_bgp400_degas_control"
+#       name: "Degas Control"
+#       unit: null
+#       description: "Control degas mode"
+#     setter_function: "degass_on"  # Calls degass_on() on physical instrument
+#     setter_arguments: {}
+#
+#   - # Pressure unit selector
+#     extractor_field: "unit"
+#     virtual_instrument:
+#       uid: "inficon_bgp400_unit_control"
+#       name: "Pressure Unit Control"
+#       unit: null
+#       description: "Select pressure unit"
+#     setter_function: "set_mbar"  # Calls set_mbar() on physical instrument
+#     setter_arguments: {}
+
