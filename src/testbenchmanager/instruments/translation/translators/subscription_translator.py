@@ -43,7 +43,7 @@ class EntityConfiguration(BaseModel):
     setter_arguments: dict[str, Any] = {}
     virtual_instrument: VirtualInstrumentMetadata
 
-
+@translator_registry.register_class()
 class SubscriptionTranslatorConfiguration(TranslatorConfiguration):
     """
     Configuration Model for a Subscription Translator.
