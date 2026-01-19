@@ -22,6 +22,15 @@ class ExperimentConfigurationTransmissionStructure(BaseModel):
     steps: dict[str, StepConfigurationTransmissionStructure]
 
 
+class StepRunTransmissionStructure(BaseModel):
+    """Transmission structure for step run."""
+
+    state: State
+    outcome: Outcome | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+
+
 class ExperimentRunTransmissionStructure(BaseModel):
     """Transmission structure for experiment run."""
 
@@ -31,11 +40,4 @@ class ExperimentRunTransmissionStructure(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
 
-
-class StepRunTransmissionStructure(BaseModel):
-    """Transmission structure for step run."""
-
-    state: State
-    outcome: Outcome | None = None
-    start_time: datetime | None = None
-    end_time: datetime | None = None
+    steps: dict[str, StepRunTransmissionStructure]

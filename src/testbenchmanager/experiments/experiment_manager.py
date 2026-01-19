@@ -37,7 +37,14 @@ class ExperimentManager:
             raise RuntimeError(
                 "Configuration manager not injected. Cannot list experiments."
             )
-        return self._config_dir.configuration_uids
+        return [
+            uid
+            for uid in self._config_dir.configuration_uids
+            if uid
+            == ExperimentConfiguration.model_validate(
+                self._config_dir.get_contents(uid)
+            ).metadata.uid
+        ]
 
     def build_experiment_config(
         self, configuration_uid: str
