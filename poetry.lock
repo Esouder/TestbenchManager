@@ -187,8 +187,8 @@ zeroconf = "^0.145.1"
 [package.source]
 type = "git"
 url = "http://github.com/Electric-Propulsion/EPComms.git"
-reference = "c7bc765"
-resolved_reference = "c7bc7650d2260d2b9c9eb048d259a656c404d4cc"
+reference = "678fa5d"
+resolved_reference = "678fa5dec54f3eaa23df16464dd02945e118b253"
 
 [[package]]
 name = "fastapi"
@@ -1192,4 +1192,4 @@ ifaddr = ">=0.1.7"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "15af7e66988aedfd76db9f57637f9f216fdffa308f3d945f1e1b9374d7b43688"
+content-hash = "a6a60ad18685f21c19bfb43cb66398356a68bdee2a5aed87120ef788ebb4de59"
