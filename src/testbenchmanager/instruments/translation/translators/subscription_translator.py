@@ -43,6 +43,7 @@ class EntityConfiguration(BaseModel):
     setter_arguments: dict[str, Any] = {}
     virtual_instrument: VirtualInstrumentMetadata
 
+
 class SubscriptionTranslatorConfiguration(TranslatorConfiguration):
     """
     Configuration Model for a Subscription Translator.
@@ -150,7 +151,7 @@ class SubscriptionTranslator(Translator[VirtualInstrumentValue]):
                 metadata=entity_config.virtual_instrument,
                 command_callback=self._setters[virtual_instrument_uid],
             )
-            self._virtual_instruments[virtual_instrument_uid] = virtual_instrument
+            self.virtual_instruments[virtual_instrument_uid] = virtual_instrument
             try:
                 virtual_instrument_registry.register(
                     virtual_instrument_uid, virtual_instrument
@@ -201,7 +202,7 @@ class SubscriptionTranslator(Translator[VirtualInstrumentValue]):
         for (
             virtual_instrument_uid,
             virtual_instrument,
-        ) in self._virtual_instruments.items():
+        ) in self.virtual_instruments.items():
             try:
                 extractor = self._extractors[virtual_instrument_uid]
                 value = extractor(message)

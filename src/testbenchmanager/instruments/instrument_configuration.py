@@ -15,13 +15,19 @@ from testbenchmanager.instruments.translation.translator_configuration import (
 logger = logging.getLogger(__name__)
 
 
+class InstrumentConfigurationMetadata(BaseModel):
+    """Metadata for the instrument configuration."""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
 class InstrumentConfiguration(BaseModel):
     """
     Configuration model for the instrument-scope config file.
     """
 
-    name: str
-    description: Optional[str] = None
+    metadata: InstrumentConfigurationMetadata = InstrumentConfigurationMetadata()
 
     physical_instruments: list[PhysicalInstrumentConfiguration] = []
 

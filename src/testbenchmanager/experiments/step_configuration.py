@@ -5,7 +5,6 @@ from pydantic import AliasChoices, BaseModel, Field
 
 class StepMetadata(BaseModel):
 
-    uid: str
     name: Optional[str] = None
     description: Optional[str] = None
 

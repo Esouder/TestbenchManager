@@ -29,12 +29,12 @@ def get_experiment_configuration(
     return ExperimentConfigurationTransmissionStructure(
         metadata=configuration.metadata,
         steps={
-            step.metadata.uid: StepConfigurationTransmissionStructure(
+            step_uid: StepConfigurationTransmissionStructure(
                 metadata=step.metadata,
                 skip_on_previous_failure=step.skip_on_previous_failure,
                 skip_on_abort=step.skip_on_abort,
             )
-            for step in configuration.steps
+            for step_uid, step in configuration.steps.items()
         },
     )
 

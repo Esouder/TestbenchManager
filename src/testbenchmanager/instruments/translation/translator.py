@@ -9,6 +9,7 @@ from testbenchmanager.common.logging import PrefixAdaptor
 from testbenchmanager.instruments.virtual import (
     VirtualInstrument,
     VirtualInstrumentValue,
+    virtual_instrument_registry,
 )
 
 from .translator_configuration import TranslatorConfiguration
@@ -26,7 +27,7 @@ class Translator(ABC, Generic[VirtualInstrumentValue]):
 
     def __init__(self, config: TranslatorConfiguration) -> None:
         self.metadata = config.metadata
-        self._virtual_instruments: dict[
+        self.virtual_instruments: dict[
             str,
             VirtualInstrument[
                 VirtualInstrumentValue
@@ -55,6 +56,15 @@ class Translator(ABC, Generic[VirtualInstrumentValue]):
         """
         Start the translator core working loop.
         """
+        for uid, virtual_instrument in self.virtual_instruments.items():
+            try:
+                virtual_instrument_registry.register(uid, virtual_instrument)
+            except KeyError as e:
+                self._logger.warning(
+                    "Failed to register virtual instrument with UID '%s': %s",
+                    uid,
+                    e,
+                )
         self._thread.start()
 
     def stop(self) -> None:
@@ -63,6 +73,8 @@ class Translator(ABC, Generic[VirtualInstrumentValue]):
         """
         self._stop_event.set()
         self._thread.join()
+        for virtual_instrument in self.virtual_instruments.values():
+            virtual_instrument_registry.unregister(virtual_instrument.metadata.uid)
 
     def _worker_thread(self) -> None:
         """

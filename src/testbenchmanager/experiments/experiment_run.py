@@ -31,7 +31,7 @@ class ExperimentRun(GenericStateful):
                 name=config.metadata.name,
             )
         )
-        self.configuration_uid = config.metadata.uid
+        self.configuration_uid = context.configuration_uid
         self.steps: dict[str, Step[StepConfiguration]] = {}
         self._abort: Event = Event()
         self._abort_lock: Lock = Lock()
@@ -39,7 +39,7 @@ class ExperimentRun(GenericStateful):
         self.start_time: datetime | None = None
         self.end_time: datetime | None = None
 
-        for step_config in config.steps:
+        for step_uid, step_config in config.steps.items():
             try:
                 step_class = step_registry.get(step_config.class_name)
             except KeyError as e:
@@ -81,7 +81,7 @@ class ExperimentRun(GenericStateful):
                         f"'{step_config.class_name}' not found in registry."
                     ) from e
 
-            self.steps[step.metadata.uid] = step
+            self.steps[step_uid] = step
 
     def run(self) -> None:
         self.state = State.RUNNING
@@ -91,13 +91,13 @@ class ExperimentRun(GenericStateful):
             self._report.subscribe_to_instrument(
                 virtual_instrument_registry.get(instrument_uid)
             )
-        for step in self.steps.values():
+        for step_uid, step in self.steps.items():
             with self._abort_lock:
                 if self._abort.is_set():
                     if step.skip_on_abort:
                         logger.info(
                             "Skipping step '%s' due to experiment abort.",
-                            step.metadata.uid,
+                            step_uid,
                         )
                         step.state = State.COMPLETE
                         step.outcome = Outcome.SKIPPED
@@ -108,7 +108,7 @@ class ExperimentRun(GenericStateful):
                 ):
                     logger.info(
                         "Skipping step '%s' due to previous step failure.",
-                        step.metadata.uid,
+                        step_uid,
                     )
                     step.state = State.COMPLETE
                     step.outcome = Outcome.SKIPPED

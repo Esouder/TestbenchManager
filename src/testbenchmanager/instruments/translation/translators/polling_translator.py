@@ -15,7 +15,6 @@ from testbenchmanager.instruments.virtual import (
     VirtualInstrument,
     VirtualInstrumentMetadata,
     VirtualInstrumentValue,
-    virtual_instrument_registry,
 )
 
 
@@ -115,19 +114,9 @@ class PollingTranslator(Translator[VirtualInstrumentValue]):
                 metadata=entity_config.virtual_instrument,
                 command_callback=self._setter_function,
             )
-            self._virtual_instruments[entity_config.virtual_instrument.uid] = (
+            self.virtual_instruments[entity_config.virtual_instrument.uid] = (
                 virtual_instrument
             )
-            try:
-                virtual_instrument_registry.register(
-                    entity_config.virtual_instrument.uid, virtual_instrument
-                )
-            except KeyError as e:
-                self._logger.warning(
-                    "Failed to register virtual instrument with UID '%s': %s",
-                    entity_config.virtual_instrument.uid,
-                    e,
-                )
 
     def _as_list(
         self, value: VirtualInstrumentValue | list[VirtualInstrumentValue]
@@ -169,17 +158,15 @@ class PollingTranslator(Translator[VirtualInstrumentValue]):
             )
             return
 
-        if len(values) != len(self._virtual_instruments):
+        if len(values) != len(self.virtual_instruments):
             self._logger.warning(
                 "Polled %d values but have %d virtual instruments configured. Skipping update.",
                 len(values),
-                len(self._virtual_instruments),
+                len(self.virtual_instruments),
             )
             return
 
-        for value, virtual_instrument in zip(
-            values, self._virtual_instruments.values()
-        ):
+        for value, virtual_instrument in zip(values, self.virtual_instruments.values()):
 
             try:
                 virtual_instrument.update_state(value)

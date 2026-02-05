@@ -8,12 +8,11 @@ from pathlib import Path
 import uvicorn
 
 from testbenchmanager.api import api
-from testbenchmanager.configuration import ConfigurationManager, ConfigurationScope
+from testbenchmanager.configuration import ConfigurationManager
 from testbenchmanager.experiments.experiment_manager import experiment_manager
 from testbenchmanager.experiments.steps import *  # Ensure steps are registered
-from testbenchmanager.instruments import InstrumentConfiguration, instrument_manager
+from testbenchmanager.instruments import instrument_manager
 from testbenchmanager.instruments.translation.translators import *  # Ensure translators are registered
-from testbenchmanager.report_generator.report_configuartion import ReportConfiguration
 from testbenchmanager.report_generator.report_manager import report_manager
 from testbenchmanager.report_generator.report_publishers import *  # Ensure report publishers are registered
 
@@ -40,29 +39,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_root = args.config_root
     config_manager = ConfigurationManager(root=config_root)
-    instrument_config_dir = config_manager.get_configuration_directory(
-        ConfigurationScope.INSTRUMENTS
-    )
-    report_config_dir = config_manager.get_configuration_directory(
-        ConfigurationScope.REPORTS
-    )
 
-    instrument_config = InstrumentConfiguration.model_validate(
-        instrument_config_dir.get_contents(instrument_config_dir.configuration_uids[0])
-    )
+    instrument_manager.inject_configuration_manager(config_manager)
+    instrument_manager.load_all_configurations()
 
-    instrument_manager.load_from_configuration(instrument_config)
-
-    logger.info("Loaded instrument configuration: %s", instrument_config.name)
+    report_manager.inject_configuration_manager(config_manager)
+    report_manager.load_all_configurations()
 
     experiment_manager.inject_configuration_manager(config_manager)
-    report_config = ReportConfiguration.model_validate(
-        config_manager.get_configuration_directory(
-            ConfigurationScope.REPORTS
-        ).get_contents(report_config_dir.configuration_uids[0])
-    )
-
-    report_manager.load_from_configuration(report_config)
 
     # Keep the application running to allow translators to operate
     try:
