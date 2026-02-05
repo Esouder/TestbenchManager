@@ -86,4 +86,4 @@ class InstrumentManager:
             translator.stop()
 
 
-instrument_manager = InstrumentManager()  # global singleton instance
+instrument_manager = InstrumentManager()

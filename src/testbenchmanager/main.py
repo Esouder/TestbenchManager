@@ -13,6 +13,9 @@ from testbenchmanager.experiments.experiment_manager import experiment_manager
 from testbenchmanager.experiments.steps import *  # Ensure steps are registered
 from testbenchmanager.instruments import InstrumentConfiguration, instrument_manager
 from testbenchmanager.instruments.translation.translators import *  # Ensure translators are registered
+from testbenchmanager.report_generator.report_configuartion import ReportConfiguration
+from testbenchmanager.report_generator.report_manager import report_manager
+from testbenchmanager.report_generator.report_publishers import *  # Ensure report publishers are registered
 
 parser = argparse.ArgumentParser(description="Testbench Manager")
 parser.add_argument(
@@ -40,6 +43,9 @@ if __name__ == "__main__":
     instrument_config_dir = config_manager.get_configuration_directory(
         ConfigurationScope.INSTRUMENTS
     )
+    report_config_dir = config_manager.get_configuration_directory(
+        ConfigurationScope.REPORTS
+    )
 
     instrument_config = InstrumentConfiguration.model_validate(
         instrument_config_dir.get_contents(instrument_config_dir.configuration_uids[0])
@@ -50,6 +56,13 @@ if __name__ == "__main__":
     logger.info("Loaded instrument configuration: %s", instrument_config.name)
 
     experiment_manager.inject_configuration_manager(config_manager)
+    report_config = ReportConfiguration.model_validate(
+        config_manager.get_configuration_directory(
+            ConfigurationScope.REPORTS
+        ).get_contents(report_config_dir.configuration_uids[0])
+    )
+
+    report_manager.load_from_configuration(report_config)
 
     # Keep the application running to allow translators to operate
     try:
