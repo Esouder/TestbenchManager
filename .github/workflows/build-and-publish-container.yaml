@@ -48,6 +48,7 @@ jobs:
             TAG_SHA=${{ env.IMAGE_ID }}:${{ env.SHORT_SHA }}
 
             docker build . \
+              --platform linux/amd64,linux/arm64 \
               -t ${{ env.IMAGE_ID }}:latest \
               -t ${{ env.IMAGE_ID }}:${{ env.APP_VERSION }} \
               -t ${{ env.IMAGE_ID }}:${{ env.SHORT_SHA }}
