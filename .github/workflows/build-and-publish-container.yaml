@@ -17,12 +17,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Extract version
+      - name: Prepare Metadata
         id: vars
         run: |
           VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)
           echo "APP_VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
           echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+          
+          IMAGE_ID="ghcr.io/${{ github.repository }}"
+          echo "IMAGE_ID=${IMAGE_ID,,}" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -44,6 +48,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.vars.outputs.APP_VERSION }}
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.vars.outputs.SHORT_SHA }}
+            ${{ steps.vars.outputs.IMAGE_ID }}:latest
+            ${{ steps.vars.outputs.IMAGE_ID }}:${{ steps.vars.outputs.APP_VERSION }}
+            ${{ steps.vars.outputs.IMAGE_ID }}:${{ steps.vars.outputs.SHORT_SHA }}
